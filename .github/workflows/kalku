@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Saham by Sahamby (Live API)</title>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS Reset and Basic Styling */
+        :root {
+            --primary-color: #0052FF;
+            --primary-hover: #0048DE;
+            --secondary-color: #F0F6FF;
+            --text-dark: #1D2433;
+            --text-light: #5A6474;
+            --border-color: #E4E7EB;
+            --success-color: #00A962;
+            --danger-color: #F84F54;
+            --white-color: #FFFFFF;
+            --body-bg: #F7F9FC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--white-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background-color: var(--white-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+        }
+        @media (min-width: 768px) {
+            .main-content {
+                flex-direction: row;
+            }
+        }
+
+        .main-content {
+            padding: 30px;
+            gap: 30px;
+        }
+        
+        /* Stock List Section (Left) */
+        .stock-search-section, .calculator-section {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+        }
+        
+        /* NEW: Stock Search Styling */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .search-box input {
+            flex-grow: 1;
+            text-transform: uppercase;
+        }
+        .search-box button {
+            white-space: nowrap;
+        }
+        #api-status {
+            font-size: 0.9em;
+            color: var(--text-light);
+            min-height: 40px;
+            background-color: var(--secondary-color);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Calculator Section (Right) */
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--secondary-color);
+        }
+
+        .primary-btn {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .primary-btn:hover {
+            background-color: var(--primary-hover);
+        }
+        .primary-btn:disabled {
+            background-color: #a0b3d1;
+            cursor: not-allowed;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, var(--primary-color), #007BFF);
+            color: var(--white-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 82, 255, 0.25);
+        }
+
+        /* Result Area */
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            display: none; /* Hidden by default */
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 1em;
+            border-bottom: 1px solid #d8e6ff;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-item span:first-child {
+            font-weight: 500;
+            color: var(--text-light);
+        }
+        .result-item span:last-child {
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: right;
+        }
+        .result-item .highlight {
+            font-weight: 700;
+            font-size: 1.2em;
+            color: var(--success-color);
+        }
+        .error-msg {
+            color: var(--danger-color);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>Sahamby 📈</h1>
+        </header>
+
+        <main class="main-content">
+            <!-- Kolom Kiri: Pencarian Saham via API -->
+            <section class="stock-search-section">
+                <h2 class="section-title">Cari Harga Saham Live</h2>
+                <div class="search-box">
+                    <input type="text" id="stock-symbol" placeholder="Ketik Kode Saham (e.g. BBRI)">
+                    <button id="fetch-btn" class="primary-btn" onclick="fetchStockPrice()">Cek Harga</button>
+                </div>
+                <div id="api-status">
+                    Masukkan kode saham lalu klik "Cek Harga".
+                </div>
+            </section>
+
+            <!-- Kolom Kanan: Kalkulator -->
+            <section class="calculator-section">
+                <h2 class="section-title">Kalkulator Investasi</h2>
+                <div class="input-group">
+                    <label for="modal">Modal Kamu (IDR)</label>
+                    <input type="text" id="modal" placeholder="Contoh: 2.000.000" onkeyup="formatInputRupiah(this)">
+                </div>
+                <div class="input-group">
+                    <label for="hargaSaham">Harga Saham per Lembar (IDR)</label>
+                    <input type="number" id="hargaSaham" placeholder="Akan terisi otomatis">
+                </div>
+                <div class="input-group">
+                    <label for="targetCuanIDR">Target Keuntungan (IDR)</label>
+                    <input type="text" id="targetCuanIDR" placeholder="Opsional, misal: 100.000" onkeyup="formatInputRupiah(this)">
+                </div>
+                <div class="input-group">
+                    <label for="targetCuanPersen">Target Keuntungan (%)</label>
+                    <input type="number" id="targetCuanPersen" placeholder="Opsional, misal: 10">
+                </div>
+                <button class="calculate-btn" onclick="calculate()">Hitung Potensi</button>
+                <div id="result"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // =================================================================
+        // PENGATURAN API
+        // =================================================================
+        // API Key Anda sudah terpasang di sini.
+        const apiKey = 'WKS8YYTON034S3QH'; 
+        // =================================================================
+
+        // Helper function to format numbers into Indonesian Rupiah currency format.
+        function formatRupiah(angka, options = {}) {
+            if (isNaN(angka)) return "Rp 0";
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2,
+                ...options
+            }).format(angka);
+        }
+
+        // Function to auto-format input with thousand separators.
+        function formatInputRupiah(inputElement) {
+            let value = inputElement.value;
+            let number = parseInt(value.replace(/[^0-9]/g, ''), 10);
+            if (isNaN(number)) {
+                inputElement.value = "";
+            } else {
+                inputElement.value = number.toLocaleString('id-ID');
+            }
+        }
+
+        // NEW: Function to fetch stock data from Alpha Vantage API
+        async function fetchStockPrice() {
+            const symbolInput = document.getElementById('stock-symbol');
+            const symbol = symbolInput.value.trim().toUpperCase();
+            const statusDiv = document.getElementById('api-status');
+            const fetchBtn = document.getElementById('fetch-btn');
+
+            if (!symbol) {
+                statusDiv.textContent = 'Silakan masukkan kode saham.';
+                statusDiv.style.color = 'var(--danger-color)';
+                return;
+            }
+
+            if (apiKey === 'YOUR_API_KEY_HERE') {
+                statusDiv.innerHTML = 'Harap masukkan API Key Anda di dalam file kode. Dapatkan di <a href="https://www.alphavantage.co/support/#api-key" target="_blank">Alpha Vantage</a>.';
+                statusDiv.style.color = 'var(--danger-color)';
+                return;
+            }
+
+            // Provide user feedback
+            statusDiv.textContent = `Mencari data untuk ${symbol}...`;
+            statusDiv.style.color = 'var(--text-light)';
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = 'Mencari...';
+
+            // For IDX stocks, append ".JK"
+            const apiSymbol = symbol + '.JK';
+            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${apiSymbol}&apikey=${apiKey}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const quote = data['Global Quote'];
+                if (quote && quote['05. price']) {
+                    const price = parseFloat(quote['05. price']);
+                    const changePercent = parseFloat(quote['10. change percent'].replace('%', ''));
+                    
+                    document.getElementById('hargaSaham').value = price;
+                    
+                    let changeHTML = `<span style="color: ${changePercent >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">(${changePercent.toFixed(2)}%)</span>`;
+                    statusDiv.innerHTML = `Harga <strong>${symbol}</strong>: ${formatRupiah(price)} ${changeHTML}`;
+                    statusDiv.style.color = 'var(--text-dark)';
+
+                } else {
+                    // Handle cases where the symbol is not found or API limit is reached
+                    statusDiv.textContent = `Tidak dapat menemukan data untuk ${symbol}. Pastikan kode benar atau coba lagi nanti.`;
+                    statusDiv.style.color = 'var(--danger-color)';
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                statusDiv.textContent = 'Terjadi kesalahan jaringan. Coba lagi.';
+                statusDiv.style.color = 'var(--danger-color)';
+            } finally {
+                // Re-enable button
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = 'Cek Harga';
+            }
+        }
+
+        // Function to round the price to the nearest valid IDX price fraction.
+        function roundToFraction(price) {
+            let fraction;
+            if (price < 200) {
+                fraction = 1;
+            } else if (price >= 200 && price < 500) {
+                fraction = 2;
+            } else if (price >= 500 && price < 2000) {
+                fraction = 5;
+            } else if (price >= 2000 && price < 5000) {
+                fraction = 10;
+            } else { // price >= 5000
+                fraction = 25;
+            }
+            return Math.ceil(price / fraction) * fraction;
+        }
+
+        // The main calculation logic.
+        function calculate() {
+            // 1. Get values and parse them correctly (removing dots).
+            const modalString = document.getElementById('modal').value.replace(/\./g, '');
+            const hargaSahamString = document.getElementById('hargaSaham').value;
+            const targetCuanIDRString = document.getElementById('targetCuanIDR').value.replace(/\./g, '');
+            const targetCuanPersenString = document.getElementById('targetCuanPersen').value;
+            
+            const modal = parseFloat(modalString);
+            const hargaSaham = parseFloat(hargaSahamString);
+            const targetCuanIDR = parseFloat(targetCuanIDRString);
+            const targetCuanPersen = parseFloat(targetCuanPersenString);
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+
+            // 2. Validate the inputs.
+            if (isNaN(modal) || isNaN(hargaSaham) || modal <= 0 || hargaSaham <= 0) {
+                resultDiv.innerHTML = `<p class="error-msg">Mohon isi Modal dan Harga Saham dengan benar.</p>`;
+                return;
+            }
+
+            // 3. Calculate how many lots can be purchased (1 lot = 100 shares).
+            const hargaPerLot = hargaSaham * 100;
+            if (modal < hargaPerLot) {
+                resultDiv.innerHTML = `<p class="error-msg">Modal tidak cukup untuk membeli 1 lot saham seharga ${formatRupiah(hargaPerLot)}.</p>`;
+                return;
+            }
+            const lotBisaDibeli = Math.floor(modal / hargaPerLot);
+
+            // 4. Calculate total investment and remaining cash.
+            const totalInvestasi = lotBisaDibeli * hargaPerLot;
+            const sisaModal = modal - totalInvestasi;
+            const totalLembar = lotBisaDibeli * 100;
+
+            // 5. Determine the target profit and calculate the required selling price.
+            let infoCuanHTML = '';
+            let targetCuanFinal = 0;
+
+            if (!isNaN(targetCuanIDR) && targetCuanIDR > 0) {
+                targetCuanFinal = targetCuanIDR;
+            } else if (!isNaN(targetCuanPersen) && targetCuanPersen > 0) {
+                targetCuanFinal = totalInvestasi * (targetCuanPersen / 100);
+            }
+
+            if (targetCuanFinal > 0) {
+                const totalNilaiJualIdeal = totalInvestasi + targetCuanFinal;
+                const hargaJualIdeal = totalNilaiJualIdeal / totalLembar;
+                
+                const hargaJualRealistis = roundToFraction(hargaJualIdeal);
+                
+                const nilaiJualAktual = hargaJualRealistis * totalLembar;
+                const cuanAktual = nilaiJualAktual - totalInvestasi;
+                const persenCuanAktual = (cuanAktual / totalInvestasi) * 100;
+                const persenKenaikanHarga = ((hargaJualRealistis - hargaSaham) / hargaSaham) * 100;
+                
+                infoCuanHTML = `
+                    <div class="result-item">
+                        <span>💰 Potensi Cuan Aktual</span>
+                        <span>${formatRupiah(cuanAktual)} (${persenCuanAktual.toFixed(2)}%)</span>
+                    </div>
+                    <div class="result-item">
+                        <span>🎯 Jual di Harga</span>
+                        <span class="highlight">${formatRupiah(hargaJualRealistis)} (+${persenKenaikanHarga.toFixed(2)}%)</span>
+                    </div>
+                `;
+            }
+
+            // 6. Display the results in a structured format.
+            resultDiv.innerHTML = `
+                <div class="result-item">
+                    <span>✅ Lot yang Didapat</span>
+                    <span>${lotBisaDibeli} Lot (${totalLembar} lbr)</span>
+                </div>
+                <div class="result-item">
+                    <span>💸 Total Investasi</span>
+                    <span>${formatRupiah(totalInvestasi)}</span>
+                </div>
+                <div class="result-item">
+                    <span>💵 Sisa Uang</span>
+                    <span>${formatRupiah(sisaModal)}</span>
+                </div>
+                ${infoCuanHTML}
+            `;
+        }
+    </script>
+
+</body>
+</html>
